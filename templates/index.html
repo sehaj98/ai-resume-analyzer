@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 30px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #cbd5e1;
+        }
+
+        main {
+            max-width: 850px;
+            margin: 35px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(15, 23, 42, 0.07);
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            margin-bottom: 18px;
+            color: #172554;
+        }
+
+        h3 {
+            margin-top: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 18px 0 8px;
+        }
+
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 170px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:focus-visible {
+            outline: 3px solid #93c5fd;
+            outline-offset: 3px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            text-align: center;
+            padding: 24px;
+            background: #eff6ff;
+            border-radius: 12px;
+            margin-bottom: 22px;
+        }
+
+        .percentage {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 14px;
+            background: #dbeafe;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #38bdf8);
+            border-radius: 20px;
+            transition: width 0.8s ease-in-out;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin: 12px 0 22px;
+        }
+
+        .skill {
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 14px;
+        }
+
+        .missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            color: #64748b;
+            margin-top: 12px;
+        }
+
+        .disclaimer {
+            margin-top: 24px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .percentage {
+                font-size: 40px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .progress-fill {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>AI Resume Analyzer</h1>
+        <p>Compare your resume with your target job requirements</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Analyze Your Resume</h2>
+
+            {% if error %}
+                <div class="error" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <label for="resume">
+                    Upload Resume (PDF, max 5 MB)
+                </label>
+
+                <input
+                    type="file"
+                    id="resume"
+                    name="resume"
+                    accept=".pdf,application/pdf"
+                    required
+                >
+
+                <label for="job_description">
+                    Job Description
+                </label>
+
+                <textarea
+                    id="job_description"
+                    name="job_description"
+                    placeholder="Paste the job description here..."
+                    required
+                ></textarea>
+
+                <button type="submit">Analyze Resume</button>
+            </form>
+        </section>
+
+        {% if result %}
+        <section class="card">
+            <h2>Analysis Results</h2>
+
+            <div class="score">
+                <div class="percentage">
+                    {{ result.match_percentage }}%
+                </div>
+
+                <p>Skill Match Score</p>
+
+                <div
+                    class="progress-track"
+                    role="progressbar"
+                    aria-label="Resume skill match score"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="{{ result.match_percentage }}"
+                >
+                    <div
+                        class="progress-fill"
+                        style="width: {{ result.match_percentage }}%;"
+                    ></div>
+                </div>
+            </div>
+
+            <h3>Skills Found in Resume</h3>
+
+            {% if result.resume_skills %}
+                <div class="skill-list">
+                    {% for skill in result.resume_skills %}
+                        <span class="skill">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty">
+                    No supported skills were detected.
+                </p>
+            {% endif %}
+
+            <h3>Matching Skills</h3>
+
+            {% if result.matched_skills %}
+                <div class="skill-list">
+                    {% for skill in result.matched_skills %}
+                        <span class="skill">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty">No matching skills found.</p>
+            {% endif %}
+
+            <h3>Missing Skills</h3>
+
+            {% if result.missing_skills %}
+                <div class="skill-list">
+                    {% for skill in result.missing_skills %}
+                        <span class="skill missing">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty">
+                    No missing skills from the supported skill list.
+                </p>
+            {% endif %}
+
+            <p class="empty disclaimer">
+                This score compares detected skills only. It is not a
+                guarantee of job suitability or hiring success.
+            </p>
+        </section>
+        {% endif %}
+    </main>
+
+    <footer>
+        AI Resume Analyzer | Built with Python and Flask
+    </footer>
+</body>
+</html>
